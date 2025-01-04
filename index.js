@@ -162,6 +162,7 @@ app.get("/reviews", async (req, res) => {
         `;
         const { rows: reviews } = await itemsPool.query(query, [currentUser.id]);
         reviews.forEach(review => {
+            review.review = review.review.split(' ').slice(0, 33).join(' ') + (review.review.split(' ').length > 50 ? '...' : '');
             review.time_added = review.time_added.toISOString().split('T')[0]; // Format date
         });
         res.render("index.ejs", { reviews, currentUser });
