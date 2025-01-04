@@ -1,0 +1,49 @@
+<%- include("partials/header.ejs") %>
+
+    <!-- Drop Down Menu -->
+     <form action="/sort" method="get" class="sort-form">
+        <label for="sort-by">Sort By</label>
+        <select name="sort-by" id="sort-by">
+            <option value="title">title</option>
+            <option value="rating">rating</option>
+            <option value="date">date</option>
+        </select>
+        <button type="submit" class="sort__button">Go</button>
+     </form>
+
+    <!-- Content -->
+     <main>
+        <% if (locals.reviews) { %>
+            <% reviews.forEach(review => { %>
+                <article class="review-content">
+                    <div class="book-thumbnail">
+                        <img src="<%= review.thumbnail %>" alt="thumbnail">
+                        <p><%= review.booktitle %></p>
+                    </div>
+                    <div class="thread-content">
+                        <div class="thread__user">
+                            <%= review.username %>  • <%= review.time_added %>
+                            
+                            <div class="rating">
+                                <% for (let i = 0; i < review.rating; i++) { %>
+                                    ⭐
+                                <% } %>
+                            </div>
+                        </div>
+
+                        <p>
+                            <%= review.review %>
+                        </p>
+                        <a href="/view-review?reviewId=<%= review.thread_id %>" class="">View Review</a>
+
+                    </div>
+                </article>
+            <% }); %>
+        <% } %>
+
+    </main>
+     
+
+     
+    
+<%- include("partials/footer.ejs") %>

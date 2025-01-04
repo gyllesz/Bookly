@@ -1,0 +1,29 @@
+<%- include("partials/header.ejs") %>
+
+<div class="review-container">
+    <h1>Edit Review</h1>
+    <div class="book-details">
+        <img src="<%= selectedBook.thumbnail %>" alt="<%= selectedBook.title %>">
+        <h2><%= selectedBook.title %></h2>
+    </div>
+    <form class="review-form" action="/update-review" method="POST">
+        <input type="hidden" name="book" value='<%= JSON.stringify(selectedBook) %>'>
+        <input type="hidden" name="reviewId" value="<%= reviewId %>">
+        <div class="form-group">
+            <label for="rating">Rating</label>
+            <select id="rating" name="rating" required>
+                <option value="">Select a rating</option>
+                <% for (let i = 1; i <= 5; i++) { %>
+                    <option value="<%= i %>" <%= rating == i ? 'selected' : '' %>><%= i %></option>
+                <% } %>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="reviewContent">Review Content</label>
+            <textarea id="reviewContent" name="reviewContent" placeholder="Write your review here..." required><%= reviewContent %></textarea>
+        </div>
+        <button class="submit-button" type="submit">Update Review</button>
+    </form>
+</div>
+
+<%- include("partials/footer.ejs") %>

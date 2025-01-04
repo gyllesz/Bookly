@@ -1,0 +1,18 @@
+<%- include("partials/header.ejs") %>
+
+<!-- Display Book Results -->
+<div class="results-container">
+    <% books.forEach((book) => { %>
+        <div class="result-card">
+            <img src="<%= book.thumbnail %>" alt="<%= book.title %>">
+            <h3><%= book.title %></h3>
+            <!-- Form to send bookId to the backend -->
+            <form action="/create-review" method="POST">
+                <input type="hidden" name="book" value="<%= JSON.stringify(book) %>">
+                <button type="submit" class="select-button">Select</button>
+            </form>
+        </div>
+    <% }); %>
+</div>
+
+<%- include("partials/footer.ejs") %>

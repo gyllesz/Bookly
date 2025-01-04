@@ -1,0 +1,39 @@
+<%- include("partials/header.ejs") %>
+
+<div class="review-container">
+    <h1>Review Details</h1>
+    <div class="book-details">
+        <img src="<%= review.thumbnail %>" alt="<%= review.bookTitle %>" class="book-image">
+        <h2><%= review.booktitle %></h2>
+    </div>
+    <div class="review-metadata">
+        <p><strong>Reviewed by:</strong> <%= review.username %></p>
+        
+        <div class="rating">
+            <% for (let i = 0; i < review.rating; i++) { %>
+                ⭐
+            <% } %>
+        </div>
+        <p><%= new Date(review.time_added).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %></p>
+    </div>
+    <div class="review-content">
+        <p><%= review.review %></p>
+    </div>
+    <% if (locals.currentUser && locals.currentUser.username === review.username) { %>
+        <div class="actions">
+            <form action="/edit-review" method="GET">
+                <input type="hidden" name="reviewId" value="<%= review.thread_id %>">
+                <button type="submit" class="action-button">Edit</button>
+            </form>
+            <form action="/delete-review" method="POST" onsubmit="return confirm('Are you sure you want to delete this review?');">
+                <input type="hidden" name="reviewId" value="<%= review.thread_id %>">
+                <button type="submit" class="action-button delete">Delete</button>
+            </form>
+        </div>
+    <% } %>
+</div>
+<script>
+    console.log("Review Object:", JSON.stringify(review) );
+</script>
+
+<%- include("partials/footer.ejs") %>
