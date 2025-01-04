@@ -1,8 +1,10 @@
 import express from "express";
 import axios from "axios";
-import pg from "pg";
+// import pg from "pg";
 import dotenv from "dotenv";
 import { render } from "ejs";
+import itemsPool from './DBConfig.js';
+
 
 // Load environment variables
 dotenv.config();
@@ -10,21 +12,23 @@ dotenv.config();
 const app = express();
 const port = 3000;
 
-// Database connection configuration
-const db = new pg.Client({
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    password: process.env.DB_PASSWORD,
-    port: process.env.DB_PORT,
-});
+// // Database connection configuration
+// const db = new pg.Client({
+//     user: process.env.DB_USER,
+//     host: process.env.DB_HOST,
+//     database: process.env.DB_NAME,
+//     password: process.env.DB_PASSWORD,
+//     port: process.env.DB_PORT,
+// });
 
-// Connect to the database
-db.connect();
+// // Connect to the database
+// db.connect();
 
 // Middleware configuration
 app.use(express.urlencoded({ extended: true })); // For parsing URL-encoded data
+app.use(express.json());
 app.use(express.static("public")); // Serve static files from the "public" directory
+
 
 // Global variable to track the current user session
 let currentUser = null;
@@ -35,7 +39,7 @@ let currentUser = null;
  */
 const fetchAndProcessReviews = async () => {
     try {
-        const threads = await db.query("SELECT * FROM threads JOIN users ON user_id = id;");
+        const threads = await itemsPool.query("SELECT * FROM threads JOIN users ON user_id = id;");
         threads.rows.forEach(review => {
             review.review = review.review.split(' ').slice(0, 33).join(' ') + (review.review.split(' ').length > 50 ? '...' : '');
             review.time_added = review.time_added.toISOString().split('T')[0]; // Formats as YYYY-MM-DD
@@ -71,11 +75,12 @@ app.post("/signin", async (req, res) => {
     if (password !== confirmPassword) return res.status(400).send("Passwords do not match");
 
     try {
-        await db.query("INSERT INTO users (username, password) VALUES ($1, $2)", [username, password]);
+        await itemsPool.query("INSERT INTO users (username, password) VALUES ($1, $2)", [username, password]);
         res.redirect("/");
     } catch (err) {
+        console.error("Error during sign-in:", err);
         if (err.code === "23505") res.status(400).send("Username already exists");
-        else res.status(500).send("Internal server error");
+        else console.error("Error during sign-in:", err);
     }
 });
 
@@ -86,7 +91,7 @@ app.post("/login", async (req, res) => {
     if (!username || !password) return res.status(400).send("Username and password are required");
 
     try {
-        const result = await db.query("SELECT * FROM users WHERE username = $1", [username]);
+        const result = await itemsPool.query("SELECT * FROM users WHERE username = $1", [username]);
         const user = result.rows[0];
 
         if (!user || user.password !== password) return res.status(400).send("Invalid username or password");
@@ -130,7 +135,7 @@ app.get("/sort", async (req, res) => {
             JOIN users ON threads.user_id = users.id 
             ORDER BY ${fieldMap[sortBy]} ASC;
         `;
-        const { rows: reviews } = await db.query(query);
+        const { rows: reviews } = await itemsPool.query(query);
         reviews.forEach(review => {
             review.review = review.review.split(' ').slice(0, 33).join(' ') + (review.review.split(' ').length > 50 ? '...' : '');
             review.time_added = review.time_added.toISOString().split('T')[0]; // Format date
@@ -155,7 +160,7 @@ app.get("/reviews", async (req, res) => {
             WHERE user_id = $1
             ORDER BY time_added DESC;
         `;
-        const { rows: reviews } = await db.query(query, [currentUser.id]);
+        const { rows: reviews } = await itemsPool.query(query, [currentUser.id]);
         reviews.forEach(review => {
             review.time_added = review.time_added.toISOString().split('T')[0]; // Format date
         });
@@ -205,7 +210,7 @@ app.post("/submit-review", async (req, res) => {
     const selectedBook = JSON.parse(book);
 
     try {
-        await db.query(
+        await itemsPool.query(
             "INSERT INTO threads (rating, review, user_id, bookTitle, thumbnail) VALUES ($1, $2, $3, $4, $5)",
             [rating, reviewContent, currentUser.id, selectedBook.title, selectedBook.thumbnail]
         );
@@ -220,7 +225,7 @@ app.post("/submit-review", async (req, res) => {
 app.get("/view-review", async (req, res) => {
     const reviewId = req.query.reviewId;
     try {
-        const result = await db.query("SELECT * FROM threads JOIN users ON user_id = id WHERE thread_id = $1", [reviewId]);
+        const result = await itemsPool.query("SELECT * FROM threads JOIN users ON user_id = id WHERE thread_id = $1", [reviewId]);
         const review = result.rows[0];
         res.render("view_review.ejs", { review, currentUser });
     } catch (err) {
@@ -232,7 +237,7 @@ app.get("/view-review", async (req, res) => {
 app.get("/edit-review", async (req, res) => {
     const reviewId = req.query.reviewId;
     try {
-        const result = await db.query("SELECT * FROM threads WHERE thread_id = $1", [reviewId]);
+        const result = await itemsPool.query("SELECT * FROM threads WHERE thread_id = $1", [reviewId]);
         const review = result.rows[0];
         res.render("edit.ejs", {
             selectedBook: { title: review.booktitle, thumbnail: review.thumbnail },
@@ -250,7 +255,7 @@ app.post("/update-review", async (req, res) => {
     const { reviewId, rating, reviewContent } = req.body;
 
     try {
-        await db.query(
+        await itemsPool.query(
             "UPDATE threads SET rating = $1, review = $2 WHERE thread_id = $3",
             [rating, reviewContent, reviewId]
         );
@@ -266,7 +271,7 @@ app.post("/update-review", async (req, res) => {
 app.post("/delete-review", async (req, res) => {
     const { reviewId   } = req.body;
     try {
-        await db.query("DELETE FROM threads WHERE thread_id = $1", [reviewId]);
+        await itemsPool.query("DELETE FROM threads WHERE thread_id = $1", [reviewId]);
         res.redirect("/home");
     } catch (err) {
         console.error("Error deleting review:", err);
