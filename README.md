@@ -1,6 +1,10 @@
 # Bookly Documentation
 
-Welcome to **Bookly**! This project is a book review web app that allows users to search for books, write reviews, edit them, and view reviews written by others. Please note that the website was made in a rush, so there may be some rough edges. Below you'll find all the necessary information to understand, run, and contribute to this project.
+Welcome to Bookly! This project is a book review web app that allows users to search for books, write reviews, edit them, and view reviews written by others. This book review web app is part of my practice to integrate a public API, enhance skills with Express/Node.js, and implement CRUD operations with PostgreSQL. As I have not yet learned about authentication or session management, there might be bugs or incomplete functionality in these areas. Additionally, the website was made in a rush, so there may be some rough edges.
+
+You can click this [link](bookly-hn78.onrender.com) to test the website immediately, but please note that it might take a while to load.
+
+Below you'll find all the necessary information to understand, run, and contribute to this project.
 
 ---
 
